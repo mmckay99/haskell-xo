@@ -53,6 +53,8 @@ robotTurn board symbol = do
 	putStrLn $ "\n" ++ (drawBoard board) ++ "\n\n" ++ "a|b|c\nd|e|f\ng|h|i\n\nEnter choice:"
 	playerChoice board symbol
 
+-- Zero-based indices (0,1,2 are top horizontal row, 3,4,5 are middle horizontal row...) of all
+-- possible "three in a row" combinations.
 possibleThrees :: [[Int]]
 possibleThrees = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]] 
 
@@ -61,10 +63,10 @@ checkHowManyInRow (Board squares) symbol threeIndices = length $ filter (==symbo
 
 checkGame :: Board -> GameState
 checkGame (Board squares)
-	| any (==3) (map (checkHowManyInRow (Board squares) (FilledSquare X)) possibleThrees) = Winner X
-	| any (==3) (map (checkHowManyInRow (Board squares) (FilledSquare O)) possibleThrees) = Winner O
-	| not (EmptySquare `elem` squares) 				= Draw
-	| otherwise 									= InPlay (Board squares) 
+	| any (==3) (map (checkHowManyInRow (Board squares) (FilledSquare X)) possibleThrees) 	= Winner X
+	| any (==3) (map (checkHowManyInRow (Board squares) (FilledSquare O)) possibleThrees) 	= Winner O
+	| not (EmptySquare `elem` squares) 														= Draw
+	| otherwise 																			= InPlay (Board squares) 
 			
 game :: Board -> [(Board -> IO (Board))] -> IO()
 game board playerFuncs = do
@@ -72,6 +74,6 @@ game board playerFuncs = do
 	let gameState = checkGame newBoard
 
 	case gameState of
-		(InPlay afterPlayer)	-> game afterPlayer (tail playerFuncs)
-		Draw					-> putStrLn $ "\n" ++ (drawBoard newBoard) ++ "Cat's game." 	 
-		Winner winner			-> putStrLn $ "\n" ++ (drawBoard newBoard) ++ "\n\nPlayer " ++ (if winner == X then "X" else "O") ++ " wins!"
+		(InPlay afterPlayer) -> game afterPlayer (tail playerFuncs)
+		Draw				 -> putStrLn $ "\n" ++ (drawBoard newBoard) ++ "Cat's game." 	 
+		Winner winner		 -> putStrLn $ "\n" ++ (drawBoard newBoard) ++ "\n\nPlayer " ++ (if winner == X then "X" else "O") ++ " wins!"
