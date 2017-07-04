@@ -1,23 +1,13 @@
+import XoBoard
+import XoRobot
+
 import Control.Monad
 import Data.Either
 import Data.Char
 import Data.List
+import Data.Maybe
 
-data Symbol = X | O deriving (Eq)
-data Square = EmptySquare | FilledSquare Symbol deriving (Eq)
-data Board = Board [Square]
 data GameState = InPlay Board | Winner Symbol | Draw
-
-emptyBoard = Board (replicate 9 EmptySquare)
-
-drawSquare :: Square -> Char -> Char
-drawSquare square emptySquareChar
-	| (square == FilledSquare X) = 'x'
-	| (square == FilledSquare O) = 'o'
-	| otherwise			  = emptySquareChar
-		
-drawBoard :: Board -> String
-drawBoard (Board squares) = (concat . transpose) [(zipWith ($) (map drawSquare squares) "______   "), "||\n||\n||"]
 
 main :: IO()
 main = do 
@@ -47,20 +37,12 @@ playerTurn :: Board -> Symbol -> IO (Board)
 playerTurn board symbol = do
 	putStrLn $ "\n" ++ (drawBoard board) ++ "\n\n" ++ "a|b|c\nd|e|f\ng|h|i\n\nEnter choice:"
 	playerChoice board symbol
+
+robotTurn = playerTurn
+
+-- Some testing stuff.
+testBoard = (Board [FilledSquare X, FilledSquare X, EmptySquare, EmptySquare, EmptySquare, EmptySquare, EmptySquare, EmptySquare, EmptySquare])
 	
-robotTurn :: Board -> Symbol -> IO (Board)
-robotTurn board symbol = do
-	putStrLn $ "\n" ++ (drawBoard board) ++ "\n\n" ++ "a|b|c\nd|e|f\ng|h|i\n\nEnter choice:"
-	playerChoice board symbol
-
--- Zero-based indices (0,1,2 are top horizontal row, 3,4,5 are middle horizontal row...) of all
--- possible "three in a row" combinations.
-possibleThrees :: [[Int]]
-possibleThrees = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]] 
-
-checkHowManyInRow :: Board -> Square -> [Int] -> Int
-checkHowManyInRow (Board squares) symbol threeIndices = length $ filter (==symbol) $ map snd $ filter (\(a,b) -> a `elem` threeIndices) (zip [0,1..] squares)
-
 checkGame :: Board -> GameState
 checkGame (Board squares)
 	| any (==3) (map (checkHowManyInRow (Board squares) (FilledSquare X)) possibleThrees) 	= Winner X
