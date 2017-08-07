@@ -37,9 +37,6 @@ playerTurn :: Board -> Symbol -> IO (Board)
 playerTurn board symbol = do
 	putStrLn $ "\n" ++ (drawBoard board) ++ "\n\n" ++ "a|b|c\nd|e|f\ng|h|i\n\nEnter choice:"
 	playerChoice board symbol
-
--- Some testing stuff.
-testBoard = (Board [FilledSquare X, FilledSquare X, EmptySquare, EmptySquare, EmptySquare, EmptySquare, EmptySquare, EmptySquare, EmptySquare])
 	
 checkGame :: Board -> GameState
 checkGame (Board squares)
@@ -55,5 +52,13 @@ game board playerFuncs = do
 
 	case gameState of
 		(InPlay afterPlayer) -> game afterPlayer (tail playerFuncs)
-		Draw				 -> putStrLn $ "\n" ++ (drawBoard newBoard) ++ "Cat's game." 	 
+		Draw				 -> putStrLn $ "\n" ++ (drawBoard newBoard) ++ "\n\nCat's game." 	 
 		Winner winner		 -> putStrLn $ "\n" ++ (drawBoard newBoard) ++ "\n\nPlayer " ++ (if winner == X then "X" else "O") ++ " wins!"
+
+
+-- Some testing stuff.
+testBoard = (Board [FilledSquare X, FilledSquare X, FilledSquare O, EmptySquare, FilledSquare O, EmptySquare, EmptySquare, EmptySquare, FilledSquare O])
+
+-- X X O
+-- _ O _
+-- _ _ O

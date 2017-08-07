@@ -2,6 +2,7 @@ module XoBoard
 ( Symbol (X, O)
 , Square (EmptySquare, FilledSquare)
 , Board (Board)
+, opponentSymbol
 , emptyBoard
 , possibleThrees
 , drawSquare

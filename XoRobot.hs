@@ -1,30 +1,13 @@
 module XoRobot 
 ( robotTurn
+, twoAndEmpty
 ) where
 
 import XoBoard
 
 import Data.List
 import Data.Maybe
-
--- These functions find patterns in the board.
-
--- Takes an "annotated square", i.e. tuple of ([i1, i2, i3], [s1, s2, s3]) where i is an index 0..8 and s 
--- is the type of square at the corresponding index. Returns true if there are two 
-twoSymbolsOneEmpty :: Square -> ([Int], [Square]) -> Bool
-twoSymbolsOneEmpty squareType square = ((length $ filter (==squareType) squareTypes) == 2) 
-										&& ((length $ filter (==EmptySquare) squareTypes) == 1)
-	where squareTypes = snd square
-
--- Returns the position of an empty square that will make 3 in a row.
-findMakeThreeInRow :: Board -> Square -> (Maybe Int)
-findMakeThreeInRow (Board squares) squareType = 
-	case twoInRowWithEmptys of
-		[] 		-> Nothing
-		(row:_) -> Just ((fst row) !! (fromJust $ elemIndex EmptySquare (snd row)))
-	where
-		twoInRowWithEmptys = filter (twoSymbolsOneEmpty squareType) annotatedBoard
-		annotatedBoard = zip possibleThrees (map (\t -> (map (\s -> squares !! s) t) ) possibleThrees)
+import Debug.Trace
 
 robotTurn :: Board -> Symbol -> IO (Board)
 robotTurn board symbol =
@@ -47,29 +30,63 @@ robotTurn board symbol =
 				splitBoard = (splitAt (offset + 1) squares) 
 			in pure $ Board ((init (fst splitBoard)) ++ [FilledSquare symbol] ++ (snd splitBoard)) 
 
--- These strategy functions return a list of indices (ranging 0..8) corresponding
+-- These "playsTo..." strategy functions return a list of indices (ranging 0..8) corresponding
 -- to possible valid plays based on their own particular strategy (e.g. playing in the centre). 
 
 playsToWin :: Board -> Symbol -> [Int]
-playsToWin board symbol = []
+playsToWin board symbol = catMaybes $ map (twoAndEmpty board symbol) possibleThrees 
 
 playsToBlock :: Board -> Symbol -> [Int]
-playsToBlock board symbol = []
+playsToBlock board symbol = catMaybes $ map (twoAndEmpty board (opponentSymbol symbol)) possibleThrees
 
+-- We must find all cases where if we were to play there, there would be 2 ways to win.
 playsToFork :: Board -> Symbol -> [Int]
-playsToFork board symbol = []
+playsToFork board symbol = filter (createsFork board symbol) [0..8]
 
+
+-- Find all plays where if the OPPONENT played, they would have a fork.
 playsToBlockOpponentFork :: Board -> Symbol -> [Int]
-playsToBlockOpponentFork board symbol = []
+playsToBlockOpponentFork board symbol = filter (createsFork board (opponentSymbol symbol)) [0..8] 
 
 playsToCenter :: Board -> Symbol -> [Int]
-playsToCenter board symbol = if (squares !! 4 == EmptySquare) then [4] else []
+playsToCenter (Board squares) symbol = if (squares !! 4 == EmptySquare) then [4] else []
 
 playsToOppositeCorner :: Board -> Symbol -> [Int]
-playsToOppositeCorner board symbol = []
-
+playsToOppositeCorner (Board squares) symbol =
+	let 
+		otherSymbol = opponentSymbol symbol
+		oppositeCorners = [(0,8),(2,6),(6,2),(8,0)]
+		otherPlayerCorners = filter (\i -> squares !! i == (FilledSquare otherSymbol)) [0,2,6,8]
+	in map snd $ filter (\(i1, i2) -> i1 `elem` otherPlayerCorners && (squares !! i2 == EmptySquare)) oppositeCorners
+		
 playsToEmptyCorner :: Board -> Symbol -> [Int]
 playsToEmptyCorner (Board squares) symbol = filter (\i -> squares !! i == EmptySquare) [0,2,6,8]
 
 playsToEmptySide :: Board -> Symbol -> [Int]
 playsToEmptySide (Board squares) symbol = filter (\i -> squares !! i == EmptySquare) [1,3,5,7]
+
+-- These are utility functions.
+
+-- Takes a board, list of 3 integers indices, and checks if this row in the board contains 
+-- two symbols of "symbol" and an empty square.
+twoAndEmpty :: Board -> Symbol -> [Int] -> Maybe Int
+twoAndEmpty (Board squares) symbol indices = 
+	let 
+		filledSymbol = (FilledSquare symbol) 
+		rowSymbols = map (\i -> squares !! i) indices
+	in if length (filledSymbol `elemIndices` rowSymbols) == 2 && (EmptySquare `elem` rowSymbols)
+	   then Just $ indices !! (fromJust (EmptySquare `elemIndex` rowSymbols))
+	   else Nothing
+
+-- Takes a board, a symbol and an index, and checks if placing a symbol
+-- at this index would create a new board where there are two possibilities to win. 
+createsFork :: Board -> Symbol -> Int -> Bool
+createsFork (Board squares) symbol index =
+	let
+		splitBoard = (splitAt (index + 1) squares) 
+		newBoard = Board ((init (fst splitBoard)) ++ [FilledSquare symbol] ++ (snd splitBoard)) 
+		possiblePlaysToWin = playsToWin newBoard symbol
+	in (squares !! index == EmptySquare) && (length possiblePlaysToWin) == 2
+	
+	
+				
