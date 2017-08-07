@@ -15,6 +15,9 @@ data Symbol = X | O deriving (Eq)
 data Square = EmptySquare | FilledSquare Symbol deriving (Eq)
 data Board = Board [Square]
 
+opponentSymbol :: Symbol -> Symbol
+opponentSymbol s = if (s == X) then O else X
+
 emptyBoard = Board (replicate 9 EmptySquare)
 
 -- Zero-based indices (0,1,2 are top horizontal row, 3,4,5 are middle horizontal row...) of all

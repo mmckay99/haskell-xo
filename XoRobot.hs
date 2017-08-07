@@ -1,5 +1,5 @@
 module XoRobot 
-( 
+( robotTurn
 ) where
 
 import XoBoard
@@ -25,3 +25,51 @@ findMakeThreeInRow (Board squares) squareType =
 	where
 		twoInRowWithEmptys = filter (twoSymbolsOneEmpty squareType) annotatedBoard
 		annotatedBoard = zip possibleThrees (map (\t -> (map (\s -> squares !! s) t) ) possibleThrees)
+
+robotTurn :: Board -> Symbol -> IO (Board)
+robotTurn board symbol =
+	let rankedPossibleMoves =
+			(playsToWin board symbol) ++
+			(playsToBlock board symbol) ++
+			(playsToFork board symbol) ++
+			(playsToBlockOpponentFork board symbol) ++
+			(playsToCenter board symbol) ++
+			(playsToOppositeCorner board symbol) ++
+			(playsToEmptyCorner board symbol) ++
+			(playsToEmptySide board symbol)
+	in if (null rankedPossibleMoves)
+		then
+			pure board
+		else
+			let
+				squares = case board of (Board s) -> s
+				offset = head rankedPossibleMoves
+				splitBoard = (splitAt (offset + 1) squares) 
+			in pure $ Board ((init (fst splitBoard)) ++ [FilledSquare symbol] ++ (snd splitBoard)) 
+
+-- These strategy functions return a list of indices (ranging 0..8) corresponding
+-- to possible valid plays based on their own particular strategy (e.g. playing in the centre). 
+
+playsToWin :: Board -> Symbol -> [Int]
+playsToWin board symbol = []
+
+playsToBlock :: Board -> Symbol -> [Int]
+playsToBlock board symbol = []
+
+playsToFork :: Board -> Symbol -> [Int]
+playsToFork board symbol = []
+
+playsToBlockOpponentFork :: Board -> Symbol -> [Int]
+playsToBlockOpponentFork board symbol = []
+
+playsToCenter :: Board -> Symbol -> [Int]
+playsToCenter board symbol = if (squares !! 4 == EmptySquare) then [4] else []
+
+playsToOppositeCorner :: Board -> Symbol -> [Int]
+playsToOppositeCorner board symbol = []
+
+playsToEmptyCorner :: Board -> Symbol -> [Int]
+playsToEmptyCorner (Board squares) symbol = filter (\i -> squares !! i == EmptySquare) [0,2,6,8]
+
+playsToEmptySide :: Board -> Symbol -> [Int]
+playsToEmptySide (Board squares) symbol = filter (\i -> squares !! i == EmptySquare) [1,3,5,7]

@@ -38,8 +38,6 @@ playerTurn board symbol = do
 	putStrLn $ "\n" ++ (drawBoard board) ++ "\n\n" ++ "a|b|c\nd|e|f\ng|h|i\n\nEnter choice:"
 	playerChoice board symbol
 
-robotTurn = playerTurn
-
 -- Some testing stuff.
 testBoard = (Board [FilledSquare X, FilledSquare X, EmptySquare, EmptySquare, EmptySquare, EmptySquare, EmptySquare, EmptySquare, EmptySquare])
 	
